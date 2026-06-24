@@ -7,11 +7,11 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 export const Layout = ({ children }: { children: React.ReactNode }) => {
-  const { token, logout } = useAuth();
+  const { isAuthenticated, logout } = useAuth();
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  if (!token) {
+  if (!isAuthenticated) {
     return <>{children}</>;
   }
 

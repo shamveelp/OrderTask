@@ -23,9 +23,8 @@ export default function LoginPage() {
       formData.append('username', username);
       formData.append('password', password);
 
-      const data = await authService.login(formData);
-      
-      login(data.access_token);
+      await authService.login(formData);
+      login();
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Login failed. Please try again.');
     } finally {

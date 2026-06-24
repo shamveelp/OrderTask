@@ -19,7 +19,10 @@ def authenticate_user(db: Session, username: str, password: str) -> Token:
     access_token = security.create_access_token(
         data={"sub": user.username}, expires_delta=access_token_expires
     )
-    return Token(access_token=access_token, token_type="bearer")
+    refresh_token = security.create_refresh_token(
+        data={"sub": user.username}
+    )
+    return {"access_token": access_token, "refresh_token": refresh_token, "token_type": "bearer"}
 
 def create_user(db: Session, user_in: UserCreate) -> User:
     user = db.query(User).filter(User.username == user_in.username).first()

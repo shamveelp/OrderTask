@@ -2,47 +2,65 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
+import { authService } from '@/services/authService';
 
 interface AuthContextType {
-  token: string | null;
-  login: (token: string) => void;
+  isAuthenticated: boolean;
+  login: () => void;
   logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType>({
-  token: null,
+  isAuthenticated: false,
   login: () => {},
   logout: () => {},
 });
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [token, setToken] = useState<string | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
   const pathname = usePathname();
 
-  useEffect(() => {
-    const storedToken = localStorage.getItem('token');
-    if (storedToken) {
-      setToken(storedToken);
-      if (pathname === '/login' || pathname === '/signup') {
-        router.push('/');
-      }
-    } else if (pathname !== '/login' && pathname !== '/signup') {
-      router.push('/login');
+  const checkAuth = async () => {
+    try {
+      await authService.me();
+      setIsAuthenticated(true);
+    } catch (error) {
+      setIsAuthenticated(false);
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
-  }, [pathname, router]);
+  };
 
-  const login = (newToken: string) => {
-    localStorage.setItem('token', newToken);
-    setToken(newToken);
+  useEffect(() => {
+    checkAuth();
+  }, []);
+
+  useEffect(() => {
+    if (!isLoading) {
+      if (isAuthenticated) {
+        if (pathname === '/login' || pathname === '/signup') {
+          router.push('/');
+        }
+      } else {
+        if (pathname !== '/login' && pathname !== '/signup') {
+          router.push('/login');
+        }
+      }
+    }
+  }, [pathname, isAuthenticated, isLoading, router]);
+
+  const login = () => {
+    setIsAuthenticated(true);
     router.push('/');
   };
 
-  const logout = () => {
-    localStorage.removeItem('token');
-    setToken(null);
+  const logout = async () => {
+    try {
+      await authService.logout();
+    } catch (e) {}
+    setIsAuthenticated(false);
     router.push('/login');
   };
 
@@ -51,7 +69,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }
 
   return (
-    <AuthContext.Provider value={{ token, login, logout }}>
+    <AuthContext.Provider value={{ isAuthenticated, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
