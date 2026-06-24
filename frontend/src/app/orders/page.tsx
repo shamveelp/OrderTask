@@ -70,6 +70,7 @@ export default function OrdersPage() {
   const [newCustomer, setNewCustomer] = useState('');
   const [newAmount, setNewAmount] = useState('');
   const [creating, setCreating] = useState(false);
+  const [formError, setFormError] = useState('');
   
   const { messages } = useWebSocket();
 
@@ -105,6 +106,13 @@ export default function OrdersPage() {
 
   const handleCreateOrder = async (e: React.FormEvent) => {
     e.preventDefault();
+    setFormError('');
+
+    if (newCustomer.trim().length < 2) {
+      setFormError('Customer name must contain at least 2 characters.');
+      return;
+    }
+
     setCreating(true);
     try {
       const data = await orderService.createOrder({
@@ -120,6 +128,7 @@ export default function OrdersPage() {
       setIsCreateModalOpen(false);
       setNewCustomer('');
       setNewAmount('');
+      setFormError('');
     } catch (error) {
       console.error('Failed to create order', error);
     } finally {
@@ -266,13 +275,21 @@ export default function OrdersPage() {
             <div className="flex justify-between items-center p-6 border-b border-zinc-800">
               <h2 className="text-xl font-bold text-white">Create New Order</h2>
               <button 
-                onClick={() => setIsCreateModalOpen(false)}
+                onClick={() => {
+                  setIsCreateModalOpen(false);
+                  setFormError('');
+                }}
                 className="text-zinc-500 hover:text-zinc-300 transition-colors"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
             <form onSubmit={handleCreateOrder} className="p-6 space-y-5">
+              {formError && (
+                <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+                  {formError}
+                </div>
+              )}
               <div>
                 <label className="block text-sm font-medium text-zinc-300 mb-1.5 flex justify-between items-center">
                   <span>Customer Name</span>
@@ -314,7 +331,10 @@ export default function OrdersPage() {
               <div className="pt-2 flex gap-3">
                 <button 
                   type="button"
-                  onClick={() => setIsCreateModalOpen(false)}
+                  onClick={() => {
+                    setIsCreateModalOpen(false);
+                    setFormError('');
+                  }}
                   className="flex-1 bg-zinc-800 hover:bg-zinc-700 text-white px-4 py-2.5 rounded-lg font-medium transition-colors"
                 >
                   Cancel
