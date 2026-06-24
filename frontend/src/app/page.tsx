@@ -73,26 +73,26 @@ export default function Dashboard() {
   ];
 
   return (
-    <div className="p-8 max-w-7xl mx-auto w-full">
-      <div className="mb-8 flex justify-between items-end">
+    <div className="p-4 sm:p-8 max-w-7xl mx-auto w-full">
+      <div className="mb-8 flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6">
         <div>
-          <h1 className="text-3xl font-bold text-white mb-2">Dashboard Overview</h1>
-          <p className="text-zinc-400">Welcome back! Here's what's happening with your store today.</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Dashboard Overview</h1>
+          <p className="text-zinc-400 text-sm sm:text-base">Welcome back! Here's what's happening with your store today.</p>
         </div>
-        <div className="flex gap-4">
-          <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl px-6 py-3 flex items-center gap-4">
-            <span className="text-zinc-400 text-sm font-medium">Revenue (INR)</span>
-            <span className="text-2xl font-bold text-emerald-400">
+        <div className="flex flex-wrap gap-3 sm:gap-4 w-full lg:w-auto">
+          <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl px-4 sm:px-6 py-3 flex-1 lg:flex-none items-center gap-3 sm:gap-4 flex min-w-[140px]">
+            <span className="text-zinc-400 text-xs sm:text-sm font-medium">Revenue (INR)</span>
+            <span className="text-xl sm:text-2xl font-bold text-emerald-400">
               ₹{totalRevenueINR.toFixed(2)}
             </span>
           </div>
-          <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl px-6 py-3 flex items-center gap-4 hidden sm:flex">
-            <span className="text-zinc-400 text-sm font-medium">Revenue (USD)</span>
-            <span className="text-2xl font-bold text-indigo-400">
+          <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl px-4 sm:px-6 py-3 flex-1 lg:flex-none items-center gap-3 sm:gap-4 flex min-w-[140px]">
+            <span className="text-zinc-400 text-xs sm:text-sm font-medium">Revenue (USD)</span>
+            <span className="text-xl sm:text-2xl font-bold text-indigo-400">
               ${totalRevenueUSD.toFixed(2)}
             </span>
           </div>
-          <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl px-6 py-3 flex items-center gap-4 hidden md:flex">
+          <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl px-4 sm:px-6 py-3 w-full sm:w-auto items-center justify-between gap-4 flex md:hidden lg:flex">
             <span className="text-zinc-400 text-sm font-medium flex items-center gap-2">
               <CloudSun className="h-4 w-4" />
               Weather (Delhi)
@@ -130,39 +130,41 @@ export default function Dashboard() {
           {orders.length === 0 ? (
             <div className="p-8 text-center text-zinc-500">No recent orders.</div>
           ) : (
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-zinc-800 text-sm font-medium text-zinc-400">
-                  <th className="py-4 px-6">Order ID</th>
-                  <th className="py-4 px-6">Customer</th>
-                  <th className="py-4 px-6">Status</th>
-                  <th className="py-4 px-6 text-right">Amount (INR)</th>
-                  <th className="py-4 px-6 text-right">Amount (USD)</th>
-                </tr>
-              </thead>
-              <tbody>
-                {orders.slice(0, 5).map((order) => (
-                  <tr key={order.id} className="border-b border-zinc-800/50 hover:bg-zinc-800/30 transition-colors">
-                    <td className="py-4 px-6 text-zinc-300">#{order.id}</td>
-                    <td className="py-4 px-6 font-medium text-zinc-100">{order.customer_name}</td>
-                    <td className="py-4 px-6">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border
-                        ${order.status === 'Completed' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 
-                          order.status === 'Processing' ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20' : 
-                          'bg-amber-500/10 text-amber-400 border-amber-500/20'}`}>
-                        {order.status}
-                      </span>
-                    </td>
-                    <td className="py-4 px-6 text-right text-zinc-300 font-medium">
-                      ₹{order.amount ? order.amount.toFixed(2) : '0.00'}
-                    </td>
-                    <td className="py-4 px-6 text-right text-emerald-400 font-medium">
-                      ${order.amount_usd ? order.amount_usd.toFixed(2) : '0.00'}
-                    </td>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse min-w-[600px]">
+                <thead>
+                  <tr className="border-b border-zinc-800 text-sm font-medium text-zinc-400">
+                    <th className="py-4 px-6 whitespace-nowrap">Order ID</th>
+                    <th className="py-4 px-6 whitespace-nowrap">Customer</th>
+                    <th className="py-4 px-6 whitespace-nowrap">Status</th>
+                    <th className="py-4 px-6 text-right whitespace-nowrap">Amount (INR)</th>
+                    <th className="py-4 px-6 text-right whitespace-nowrap">Amount (USD)</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {orders.slice(0, 5).map((order) => (
+                    <tr key={order.id} className="border-b border-zinc-800/50 hover:bg-zinc-800/30 transition-colors">
+                      <td className="py-4 px-6 text-zinc-300">#{order.id}</td>
+                      <td className="py-4 px-6 font-medium text-zinc-100">{order.customer_name}</td>
+                      <td className="py-4 px-6">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border
+                          ${order.status === 'Completed' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 
+                            order.status === 'Processing' ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20' : 
+                            'bg-amber-500/10 text-amber-400 border-amber-500/20'}`}>
+                          {order.status}
+                        </span>
+                      </td>
+                      <td className="py-4 px-6 text-right text-zinc-300 font-medium whitespace-nowrap">
+                        ₹{order.amount ? order.amount.toFixed(2) : '0.00'}
+                      </td>
+                      <td className="py-4 px-6 text-right text-emerald-400 font-medium whitespace-nowrap">
+                        ${order.amount_usd ? order.amount_usd.toFixed(2) : '0.00'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
       </div>
