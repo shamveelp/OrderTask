@@ -18,20 +18,23 @@ async def get_all_orders_with_usd(db: Session, skip: int = 0, limit: int = 100, 
 async def create_order_with_broadcast(db: Session, order_in: schemas.OrderCreate) -> dict:
     order = repository.create_order(db, order_in)
     
+    rate = await get_exchange_rate("INR", "USD")
+    order_dict = order.__dict__.copy()
+    amount_usd = order.amount * rate
+    order_dict["amount_usd"] = amount_usd
+    
     await manager.broadcast({
         "type": "new_order",
         "data": {
             "id": order.id,
             "customer_name": order.customer_name,
             "amount": order.amount,
+            "amount_usd": amount_usd,
             "status": order.status,
             "created_at": order.created_at.isoformat()
         }
     })
     
-    rate = await get_exchange_rate("INR", "USD")
-    order_dict = order.__dict__.copy()
-    order_dict["amount_usd"] = order.amount * rate
     return order_dict
 
 async def get_single_order_with_usd(db: Session, order_id: int) -> dict:
