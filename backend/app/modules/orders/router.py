@@ -5,6 +5,7 @@ from app.core.database import get_db
 from app.modules.auth.dependencies import get_current_active_user
 from app.modules.auth.model import User
 from app.modules.orders import service, schemas
+from app.external.random_user_api import get_random_customer_name
 
 router = APIRouter(prefix="/orders", tags=["orders"])
 
@@ -26,6 +27,11 @@ async def read_orders(
     current_user: User = Depends(get_current_active_user),
 ) -> Any:
     return await service.get_all_orders_with_usd(db, skip=skip, limit=limit, status=status)
+
+@router.get("/random-customer", response_model=dict)
+async def get_random_customer(current_user: User = Depends(get_current_active_user)):
+    name = await get_random_customer_name()
+    return {"name": name}
 
 @router.get("/{id}", response_model=schemas.Order)
 async def read_order(

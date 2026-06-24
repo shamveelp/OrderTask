@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '@/services/api';
 import { useWebSocket } from '@/hooks/useWebSockets';
-import { Search, Plus, Filter, ArrowRight, Loader2, X } from 'lucide-react';
+import { Search, Plus, Filter, ArrowRight, Loader2, X, Dices } from 'lucide-react';
 
 interface Order {
   id: number;
@@ -89,6 +89,15 @@ export default function OrdersPage() {
       setOrders(prev => prev.map(o => o.id === id ? { ...o, status: newStatus } : o));
     } catch (error) {
       console.error('Failed to update order status', error);
+    }
+  };
+
+  const handleRandomCustomer = async () => {
+    try {
+      const response = await api.get('/orders/random-customer');
+      setNewCustomer(response.data.name);
+    } catch (error) {
+      console.error('Failed to fetch random customer', error);
     }
   };
 
@@ -191,7 +200,7 @@ export default function OrdersPage() {
                         {order.status}
                       </span>
                     </td>
-                    <td className="py-4 px-6 text-right">
+                    <td className="py-4 px-6 text-right flex items-center justify-end gap-2">
                       <select 
                         value={order.status}
                         onChange={(e) => handleUpdateStatus(order.id, e.target.value)}
@@ -225,7 +234,17 @@ export default function OrdersPage() {
             </div>
             <form onSubmit={handleCreateOrder} className="p-6 space-y-5">
               <div>
-                <label className="block text-sm font-medium text-zinc-300 mb-1.5">Customer Name</label>
+                <label className="block text-sm font-medium text-zinc-300 mb-1.5 flex justify-between items-center">
+                  <span>Customer Name</span>
+                  <button 
+                    type="button" 
+                    onClick={handleRandomCustomer}
+                    className="text-xs text-indigo-400 hover:text-indigo-300 flex items-center gap-1"
+                    title="Generate from Random User API"
+                  >
+                    <Dices className="h-3 w-3" /> Randomize
+                  </button>
+                </label>
                 <input 
                   type="text"
                   value={newCustomer}

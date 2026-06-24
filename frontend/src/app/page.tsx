@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '@/services/api';
 import { useWebSocket } from '@/hooks/useWebSockets';
-import { ShoppingCart, Clock, CheckCircle, Package } from 'lucide-react';
+import { ShoppingCart, Clock, CheckCircle, Package, CloudSun } from 'lucide-react';
 
 interface Order {
   id: number;
@@ -17,6 +17,7 @@ interface Order {
 export default function Dashboard() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [weather, setWeather] = useState<string>('Loading...');
   const { messages } = useWebSocket();
 
   useEffect(() => {
@@ -36,10 +37,14 @@ export default function Dashboard() {
 
   const fetchOrders = async () => {
     try {
-      const response = await api.get('/orders');
-      setOrders(response.data);
+      const [ordersRes, summaryRes] = await Promise.all([
+        api.get('/orders'),
+        api.get('/dashboard/summary')
+      ]);
+      setOrders(ordersRes.data);
+      setWeather(summaryRes.data.weather);
     } catch (error) {
-      console.error('Failed to fetch orders', error);
+      console.error('Failed to fetch dashboard data', error);
     } finally {
       setLoading(false);
     }
@@ -85,6 +90,15 @@ export default function Dashboard() {
             <span className="text-zinc-400 text-sm font-medium">Revenue (USD)</span>
             <span className="text-2xl font-bold text-indigo-400">
               ${totalRevenueUSD.toFixed(2)}
+            </span>
+          </div>
+          <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl px-6 py-3 flex items-center gap-4 hidden md:flex">
+            <span className="text-zinc-400 text-sm font-medium flex items-center gap-2">
+              <CloudSun className="h-4 w-4" />
+              Weather (Delhi)
+            </span>
+            <span className="text-xl font-bold text-blue-400">
+              {weather}
             </span>
           </div>
         </div>
