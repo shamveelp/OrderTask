@@ -1,59 +1,112 @@
-# Real-Time Order Management Dashboard
+# OrderTask
 
-A lightweight full-stack application built with FastAPI (Python), PostgreSQL, Next.js (React), and Tailwind CSS. It demonstrates real-time status updates via WebSockets, database modeling, external API integration, and clean engineering practices.
+OrderTask is a modern, real-time Order Management System designed with a robust Domain-Driven Design (DDD) backend architecture and a highly responsive, mobile-first frontend.
 
-## Features
+The platform provides seamless order processing, real-time activity tracking via WebSockets, dynamic currency conversions using third-party APIs, and secure HttpOnly cookie-based authentication.
 
-- **Authentication**: JWT-based mock authentication.
-- **Real-time Updates**: Order status changes broadcasted to all connected clients via WebSockets automatically.
-- **External API Integration**: Automatically converts EUR to USD upon order creation/read via the `Frankfurter.app` open source exchange rate API.
-- **Premium Frontend UI**: Built with Next.js, featuring responsive design, glassy components, dark mode, loading states, and smooth interactions.
-- **Database Migrations**: Setup using Alembic.
-- **Containerization Support**: Includes Docker setup for PostgreSQL database.
+---
 
-## Architecture Decisions
+## 🚀 Features
+- **Real-Time Updates**: Live websocket broadcasts for instant dashboard synchronization whenever an order is created or its status changes.
+- **Third-Party API Integrations**: 
+  - Real-time `INR` to `USD` currency conversion (via Frankfurter API).
+  - Dynamic weather fetching for dashboard context (via Open-Meteo).
+  - Random customer generation for quick testing (via Randomuser.me).
+- **Advanced Security**: JWT-based authentication featuring short-lived Access Tokens and long-lived Refresh Tokens, securely stored in `HttpOnly` cookies to prevent XSS attacks.
+- **Responsive UI**: Built with Next.js and Tailwind CSS, featuring mobile-first sidebars, horizontal scrolling tables, and glassmorphic aesthetics.
 
-1. **Backend Architecture**:
-   - Used **FastAPI** for its high performance, automatic OpenAPI documentation, and native WebSocket support.
-   - Organized into modular components: `api` (routes), `models` (DB), `schemas` (Pydantic), `core` (Config/Auth), and `external` (API integrations).
-   - **PostgreSQL** + **SQLAlchemy** chosen for robust relational data handling. **Alembic** is used for future-proof migrations.
-   - `Frankfurter` API is used over standard mocked APIs because it provides reliable currency exchange without needing an API Key, simplifying deployment.
+---
 
-2. **Frontend Architecture**:
-   - **Next.js (App Router)** + **React** used to provide a modern, highly performant React framework.
-   - **Tailwind CSS** with custom dark styling to achieve the requested premium dashboard look without relying heavily on bulky UI libraries.
-   - Used `axios` with an interceptor to cleanly manage Auth tokens across all requests.
-   - A custom `useWebSocket` hook abstracting connection logic and message parsing to push updates cleanly into React component state without refreshing.
+## 🛠️ Backend Setup Guide
 
-## Setup Instructions
+The backend is built with **FastAPI** (Python) and utilizes **PostgreSQL** via SQLAlchemy for data persistence.
 
-### 1. Prerequisites
-- Docker & Docker Compose
+### Prerequisites
 - Python 3.10+
+- PostgreSQL server
+
+### Installation
+1. Navigate to the backend directory:
+   ```bash
+   cd backend
+   ```
+2. Create and activate a virtual environment:
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   ```
+3. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+4. Set up your `.env` file (see below).
+5. Run the application (tables will auto-create on startup):
+   ```bash
+   uvicorn app.main:app --reload
+   ```
+
+### Backend `.env` Example
+Create a `.env` file in the root of the `backend` directory:
+```env
+PROJECT_NAME="OrderFlow API"
+VERSION="1.0.0"
+API_V1_STR="/api/v1"
+SECRET_KEY="your-super-secret-key-change-it-in-production"
+ALGORITHM="HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES=30
+REFRESH_TOKEN_EXPIRE_DAYS=7
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/orderflow"
+```
+
+---
+
+## 🎨 Frontend Setup Guide
+
+The frontend is a **Next.js** application styled with **Tailwind CSS**.
+
+### Prerequisites
 - Node.js 18+
+- npm or yarn
 
-### 2. Backend Setup
-1. Navigate to `backend/` directory.
-2. Start the database: `docker-compose up -d`
-3. Create a virtual environment: `python -m venv venv`
-4. Activate the virtual environment:
-   - Windows: `venv\Scripts\activate`
-   - Mac/Linux: `source venv/bin/activate`
-5. Install dependencies: `pip install -r requirements.txt`
-6. Run Alembic migrations (Optional if database is clean): `alembic upgrade head`
-7. Start the server: `uvicorn app.main:app --reload`
-   - The API will be available at http://localhost:8000
-   - Swagger Documentation available at http://localhost:8000/docs
+### Installation
+1. Navigate to the frontend directory:
+   ```bash
+   cd frontend
+   ```
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+3. Set up your `.env` file (see below).
+4. Start the development server:
+   ```bash
+   npm run dev
+   ```
 
-### 3. Frontend Setup
-1. Navigate to `frontend/` directory.
-2. Install dependencies: `npm install`
-3. Start the dev server: `npm run dev`
-4. Access the application at http://localhost:3000
+### Frontend `.env` Example
+Create a `.env` file in the root of the `frontend` directory:
+```env
+NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
+NEXT_PUBLIC_WS_URL=ws://localhost:8000/api/v1/ws
+```
 
-## API Documentation
-The swagger documentation provides full details on all endpoints.
-- `/api/v1/auth/login`: POST mock login
-- `/api/v1/orders/`: GET (list), POST (create)
-- `/api/v1/orders/{id}`: GET (read), PUT (update status)
-- `/api/v1/ws/ws`: WebSocket endpoint
+---
+
+## 🏗️ Backend Architecture
+
+The backend strictly follows a **Domain-Driven Design (DDD)** folder structure to ensure massive scalability and decoupling.
+
+### Directory Structure
+- **`app/core/`**: Houses global configurations, secure WebSocket connection managers, security hashing, JWT generation logic, and the database engine setup.
+- **`app/external/`**: Encapsulates all third-party API interactions (`currency_api.py`, `random_user_api.py`, `weather_api.py`). If an external API changes endpoints (e.g., Frankfurter API), it only needs to be updated here, isolating the business logic from external failures.
+- **`app/modules/`**: Contains the core business domains (`auth`, `orders`, `dashboard`). Each module is entirely self-contained with its own:
+  - `router.py`: FastAPI endpoints.
+  - `model.py`: SQLAlchemy database models.
+  - `schemas.py`: Pydantic validation schemas.
+  - `service.py`: Business logic and database operations.
+  - `dependencies.py` (if applicable): Module-specific dependency injections.
+
+### How the System Works
+1. **Authentication Flow**: When a user logs in, the `auth/service.py` issues two JWTs (Access & Refresh). The `auth/router.py` injects these directly into the browser as `HttpOnly`, `SameSite=lax` cookies. The frontend Axios client intercepts `401 Unauthorized` requests, automatically hits the `/auth/refresh` endpoint, rotates the token, and seamlessly retries the request.
+2. **Order Processing**: When an order is created, the system immediately calculates its USD equivalent via the external `currency_api`. It saves the record to the database and utilizes `app.core.websocket.manager` to broadcast the exact JSON payload to all actively connected clients.
+3. **WebSockets**: A single `/ws` endpoint is kept open by the frontend's `useWebSocket` hook. The hook possesses an automatic 3-second reconnection loop in case of network interruptions, guaranteeing that the dashboard metrics and recent activity tables remain in sync across all active tabs without requiring page reloads.
