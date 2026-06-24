@@ -1,65 +1,145 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import React, { useEffect, useState } from 'react';
+import { api } from '@/services/api';
+import { useWebSocket } from '@/hooks/useWebSockets';
+import { ShoppingCart, Clock, CheckCircle, Package } from 'lucide-react';
+
+interface Order {
+  id: number;
+  customer_name: string;
+  amount: number;
+  status: string;
+  created_at: string;
+  amount_usd?: number;
+}
+
+export default function Dashboard() {
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { messages } = useWebSocket();
+
+  useEffect(() => {
+    fetchOrders();
+  }, []);
+
+  useEffect(() => {
+    if (messages.length > 0) {
+      const lastMessage = messages[messages.length - 1];
+      if (lastMessage.type === 'new_order') {
+        setOrders(prev => [lastMessage.data, ...prev]);
+      } else if (lastMessage.type === 'update_order') {
+        setOrders(prev => prev.map(o => o.id === lastMessage.data.id ? { ...o, status: lastMessage.data.status } : o));
+      }
+    }
+  }, [messages]);
+
+  const fetchOrders = async () => {
+    try {
+      const response = await api.get('/orders');
+      setOrders(response.data);
+    } catch (error) {
+      console.error('Failed to fetch orders', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const totalOrders = orders.length;
+  const pendingOrders = orders.filter(o => o.status === 'Pending').length;
+  const processingOrders = orders.filter(o => o.status === 'Processing').length;
+  const completedOrders = orders.filter(o => o.status === 'Completed').length;
+  
+  const totalRevenue = orders.reduce((acc, curr) => acc + (curr.amount_usd || 0), 0);
+
+  if (loading) {
+    return (
+      <div className="p-8 h-full flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500"></div>
+      </div>
+    );
+  }
+
+  const statCards = [
+    { label: 'Total Orders', value: totalOrders, icon: Package, color: 'text-blue-400', bg: 'bg-blue-500/10' },
+    { label: 'Pending', value: pendingOrders, icon: Clock, color: 'text-amber-400', bg: 'bg-amber-500/10' },
+    { label: 'Processing', value: processingOrders, icon: ShoppingCart, color: 'text-indigo-400', bg: 'bg-indigo-500/10' },
+    { label: 'Completed', value: completedOrders, icon: CheckCircle, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
+  ];
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="p-8 max-w-7xl mx-auto w-full">
+      <div className="mb-8 flex justify-between items-end">
+        <div>
+          <h1 className="text-3xl font-bold text-white mb-2">Dashboard Overview</h1>
+          <p className="text-zinc-400">Welcome back! Here's what's happening with your store today.</p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+        <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl px-6 py-3 flex items-center gap-4">
+          <span className="text-zinc-400 text-sm font-medium">Total Revenue (USD)</span>
+          <span className="text-2xl font-bold text-emerald-400">
+            ${totalRevenue.toFixed(2)}
+          </span>
         </div>
-      </main>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+        {statCards.map((stat, i) => (
+          <div key={i} className="bg-zinc-900/50 border border-zinc-800/80 rounded-2xl p-6 backdrop-blur-sm hover:border-zinc-700 transition-colors">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-sm font-medium text-zinc-400 mb-1">{stat.label}</p>
+                <h3 className="text-3xl font-bold text-white">{stat.value}</h3>
+              </div>
+              <div className={`p-3 rounded-xl ${stat.bg}`}>
+                <stat.icon className={`h-6 w-6 ${stat.color}`} />
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div>
+        <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+          <span className="w-2 h-6 bg-indigo-500 rounded-full"></span>
+          Recent Activity
+        </h2>
+        
+        <div className="bg-zinc-900/50 border border-zinc-800 rounded-2xl overflow-hidden">
+          {orders.length === 0 ? (
+            <div className="p-8 text-center text-zinc-500">No recent orders.</div>
+          ) : (
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-zinc-800 text-sm font-medium text-zinc-400">
+                  <th className="py-4 px-6">Order ID</th>
+                  <th className="py-4 px-6">Customer</th>
+                  <th className="py-4 px-6">Status</th>
+                  <th className="py-4 px-6 text-right">Amount (USD)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {orders.slice(0, 5).map((order) => (
+                  <tr key={order.id} className="border-b border-zinc-800/50 hover:bg-zinc-800/30 transition-colors">
+                    <td className="py-4 px-6 text-zinc-300">#{order.id}</td>
+                    <td className="py-4 px-6 font-medium text-zinc-100">{order.customer_name}</td>
+                    <td className="py-4 px-6">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border
+                        ${order.status === 'Completed' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 
+                          order.status === 'Processing' ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20' : 
+                          'bg-amber-500/10 text-amber-400 border-amber-500/20'}`}>
+                        {order.status}
+                      </span>
+                    </td>
+                    <td className="py-4 px-6 text-right text-emerald-400 font-medium">
+                      ${order.amount_usd ? order.amount_usd.toFixed(2) : '0.00'}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
