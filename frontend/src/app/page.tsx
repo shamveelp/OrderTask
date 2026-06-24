@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import { api } from '@/services/api';
+import { orderService } from '@/services/orderService';
+import { dashboardService } from '@/services/dashboardService';
 import { useWebSocket } from '@/hooks/useWebSockets';
 import { ShoppingCart, Clock, CheckCircle, Package, CloudSun } from 'lucide-react';
 
@@ -37,12 +38,12 @@ export default function Dashboard() {
 
   const fetchOrders = async () => {
     try {
-      const [ordersRes, summaryRes] = await Promise.all([
-        api.get('/orders'),
-        api.get('/dashboard/summary')
+      const [ordersData, summaryData] = await Promise.all([
+        orderService.getOrders(),
+        dashboardService.getSummary()
       ]);
-      setOrders(ordersRes.data);
-      setWeather(summaryRes.data.weather);
+      setOrders(ordersData);
+      setWeather(summaryData.weather);
     } catch (error) {
       console.error('Failed to fetch dashboard data', error);
     } finally {

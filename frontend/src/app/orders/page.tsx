@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import { api } from '@/services/api';
+import { orderService } from '@/services/orderService';
 import { useWebSocket } from '@/hooks/useWebSockets';
 import { Search, Plus, Filter, ArrowRight, Loader2, X, Dices, ChevronDown } from 'lucide-react';
 
@@ -94,8 +94,8 @@ export default function OrdersPage() {
 
   const fetchOrders = async () => {
     try {
-      const response = await api.get('/orders');
-      setOrders(response.data);
+      const data = await orderService.getOrders();
+      setOrders(data);
     } catch (error) {
       console.error('Failed to fetch orders', error);
     } finally {
@@ -107,15 +107,15 @@ export default function OrdersPage() {
     e.preventDefault();
     setCreating(true);
     try {
-      const response = await api.post('/orders', {
+      const data = await orderService.createOrder({
         customer_name: newCustomer,
         amount: parseFloat(newAmount),
         status: 'Pending'
       });
       // WebSockets will broadcast this, but we can optimistically update
       setOrders(prev => {
-        if (prev.find(o => o.id === response.data.id)) return prev;
-        return [response.data, ...prev];
+        if (prev.find(o => o.id === data.id)) return prev;
+        return [data, ...prev];
       });
       setIsCreateModalOpen(false);
       setNewCustomer('');
@@ -129,7 +129,7 @@ export default function OrdersPage() {
 
   const handleUpdateStatus = async (id: number, newStatus: string) => {
     try {
-      await api.put(`/orders/${id}`, { status: newStatus });
+      await orderService.updateOrderStatus(id, newStatus);
       // WS will broadcast to others. Local optimistic update is handled by the server response and broadcast
       setOrders(prev => prev.map(o => o.id === id ? { ...o, status: newStatus } : o));
     } catch (error) {
@@ -139,8 +139,8 @@ export default function OrdersPage() {
 
   const handleRandomCustomer = async () => {
     try {
-      const response = await api.get('/orders/random-customer');
-      setNewCustomer(response.data.name);
+      const data = await orderService.getRandomCustomer();
+      setNewCustomer(data.name);
     } catch (error) {
       console.error('Failed to fetch random customer', error);
     }

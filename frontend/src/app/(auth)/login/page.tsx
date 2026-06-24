@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useAuth } from '@/components/AuthProvider';
-import { api } from '@/services/api';
+import { authService } from '@/services/authService';
 import { Package2, ArrowRight, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -23,11 +23,9 @@ export default function LoginPage() {
       formData.append('username', username);
       formData.append('password', password);
 
-      const response = await api.post('/auth/login', formData, {
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
-      });
+      const data = await authService.login(formData);
       
-      login(response.data.access_token);
+      login(data.access_token);
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Login failed. Please try again.');
     } finally {

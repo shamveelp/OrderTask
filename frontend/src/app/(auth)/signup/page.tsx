@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
-import { api } from '@/services/api';
+import { authService } from '@/services/authService';
 import { Package2, ArrowRight, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -28,7 +28,7 @@ export default function SignupPage() {
     setLoading(true);
 
     try {
-      await api.post('/auth/signup', {
+      await authService.signup({
         username,
         password
       });
