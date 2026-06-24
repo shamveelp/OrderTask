@@ -28,9 +28,10 @@ function ActionDropdown({ currentStatus, onStatusChange }: { currentStatus: stri
     <div className="relative inline-block text-left" onClick={(e) => e.stopPropagation()}>
       <button 
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 bg-zinc-900 border border-zinc-700 hover:border-zinc-500 rounded-md px-3 py-1.5 text-sm text-zinc-200 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+        className="flex items-center gap-2 bg-zinc-900 border border-zinc-700 hover:border-zinc-500 rounded-md px-3 py-1.5 text-sm text-zinc-200 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500/50 min-w-[120px] justify-between"
       >
-        Update <ChevronDown className="h-4 w-4 text-zinc-400" />
+        <span>{currentStatus}</span>
+        <ChevronDown className="h-4 w-4 text-zinc-400" />
       </button>
       
       {isOpen && (
