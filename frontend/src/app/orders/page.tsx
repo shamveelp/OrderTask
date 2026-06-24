@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '@/services/api';
 import { useWebSocket } from '@/hooks/useWebSockets';
-import { Search, Plus, Filter, ArrowRight, Loader2, X, Dices } from 'lucide-react';
+import { Search, Plus, Filter, ArrowRight, Loader2, X, Dices, ChevronDown } from 'lucide-react';
 
 interface Order {
   id: number;
@@ -12,6 +12,50 @@ interface Order {
   status: string;
   created_at: string;
   amount_usd?: number;
+}
+
+function ActionDropdown({ currentStatus, onStatusChange }: { currentStatus: string, onStatusChange: (status: string) => void }) {
+  const [isOpen, setIsOpen] = useState(false);
+  
+  useEffect(() => {
+    if (!isOpen) return;
+    const close = () => setIsOpen(false);
+    document.addEventListener('click', close);
+    return () => document.removeEventListener('click', close);
+  }, [isOpen]);
+
+  return (
+    <div className="relative inline-block text-left" onClick={(e) => e.stopPropagation()}>
+      <button 
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center gap-2 bg-zinc-900 border border-zinc-700 hover:border-zinc-500 rounded-md px-3 py-1.5 text-sm text-zinc-200 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+      >
+        Update <ChevronDown className="h-4 w-4 text-zinc-400" />
+      </button>
+      
+      {isOpen && (
+        <div className="absolute right-0 mt-2 w-40 rounded-xl shadow-xl bg-zinc-800 z-10 p-1 border border-zinc-700 animate-in fade-in slide-in-from-top-2 duration-200">
+          {['Pending', 'Processing', 'Completed'].map((status) => (
+            <button
+              key={status}
+              disabled={status === currentStatus}
+              onClick={() => {
+                onStatusChange(status);
+                setIsOpen(false);
+              }}
+              className={`w-full text-left block px-4 py-2 text-sm rounded-lg transition-colors ${
+                status === currentStatus 
+                  ? 'bg-zinc-900/50 text-zinc-500 cursor-not-allowed' 
+                  : 'text-zinc-200 hover:bg-indigo-500/20 hover:text-indigo-300'
+              }`}
+            >
+              Set {status}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
 
 export default function OrdersPage() {
@@ -201,15 +245,10 @@ export default function OrdersPage() {
                       </span>
                     </td>
                     <td className="py-4 px-6 text-right flex items-center justify-end gap-2">
-                      <select 
-                        value={order.status}
-                        onChange={(e) => handleUpdateStatus(order.id, e.target.value)}
-                        className="bg-zinc-950 border border-zinc-700 rounded-md px-2 py-1.5 text-sm text-zinc-200 focus:outline-none focus:border-indigo-500"
-                      >
-                        <option value="Pending">Set Pending</option>
-                        <option value="Processing">Set Processing</option>
-                        <option value="Completed">Set Completed</option>
-                      </select>
+                      <ActionDropdown 
+                        currentStatus={order.status}
+                        onStatusChange={(newStatus) => handleUpdateStatus(order.id, newStatus)}
+                      />
                     </td>
                   </tr>
                 ))}
