@@ -1,7 +1,7 @@
 import httpx
+from app.core.logging import logger
 
 async def get_exchange_rate(base: str = "INR", target: str = "USD") -> float:
-    # We will use frankfurter.app for open source currency conversion without API key
     try:
         async with httpx.AsyncClient() as client:
             response = await client.get(f"https://api.frankfurter.app/latest?from={base}&to={target}")
@@ -9,6 +9,5 @@ async def get_exchange_rate(base: str = "INR", target: str = "USD") -> float:
             data = response.json()
             return data["rates"][target]
     except Exception as e:
-        print(f"Failed to fetch exchange rate: {e}")
-        # Return fallback rate if API fails
-        return 1.1 
+        logger.error(f"Failed to fetch exchange rate: {e}")
+        return 0.012 # Fallback rate for INR -> USD

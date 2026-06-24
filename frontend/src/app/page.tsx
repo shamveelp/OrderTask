@@ -50,8 +50,8 @@ export default function Dashboard() {
   const processingOrders = orders.filter(o => o.status === 'Processing').length;
   const completedOrders = orders.filter(o => o.status === 'Completed').length;
   
-  const totalRevenue = orders.reduce((acc, curr) => acc + (curr.amount_usd || 0), 0);
-
+  const totalRevenueUSD = orders.reduce((acc, curr) => acc + (curr.amount_usd || 0), 0);
+  const totalRevenueINR = orders.reduce((acc, curr) => acc + (curr.amount || 0), 0);
   if (loading) {
     return (
       <div className="p-8 h-full flex items-center justify-center">
@@ -74,11 +74,19 @@ export default function Dashboard() {
           <h1 className="text-3xl font-bold text-white mb-2">Dashboard Overview</h1>
           <p className="text-zinc-400">Welcome back! Here's what's happening with your store today.</p>
         </div>
-        <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl px-6 py-3 flex items-center gap-4">
-          <span className="text-zinc-400 text-sm font-medium">Total Revenue (USD)</span>
-          <span className="text-2xl font-bold text-emerald-400">
-            ${totalRevenue.toFixed(2)}
-          </span>
+        <div className="flex gap-4">
+          <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl px-6 py-3 flex items-center gap-4">
+            <span className="text-zinc-400 text-sm font-medium">Revenue (INR)</span>
+            <span className="text-2xl font-bold text-emerald-400">
+              ₹{totalRevenueINR.toFixed(2)}
+            </span>
+          </div>
+          <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl px-6 py-3 flex items-center gap-4 hidden sm:flex">
+            <span className="text-zinc-400 text-sm font-medium">Revenue (USD)</span>
+            <span className="text-2xl font-bold text-indigo-400">
+              ${totalRevenueUSD.toFixed(2)}
+            </span>
+          </div>
         </div>
       </div>
 
@@ -114,6 +122,7 @@ export default function Dashboard() {
                   <th className="py-4 px-6">Order ID</th>
                   <th className="py-4 px-6">Customer</th>
                   <th className="py-4 px-6">Status</th>
+                  <th className="py-4 px-6 text-right">Amount (INR)</th>
                   <th className="py-4 px-6 text-right">Amount (USD)</th>
                 </tr>
               </thead>
@@ -129,6 +138,9 @@ export default function Dashboard() {
                           'bg-amber-500/10 text-amber-400 border-amber-500/20'}`}>
                         {order.status}
                       </span>
+                    </td>
+                    <td className="py-4 px-6 text-right text-zinc-300 font-medium">
+                      ₹{order.amount ? order.amount.toFixed(2) : '0.00'}
                     </td>
                     <td className="py-4 px-6 text-right text-emerald-400 font-medium">
                       ${order.amount_usd ? order.amount_usd.toFixed(2) : '0.00'}

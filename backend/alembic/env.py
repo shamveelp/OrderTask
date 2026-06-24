@@ -16,7 +16,8 @@ if config.config_file_name is not None:
 
 from app.core.config import settings
 from app.core.database import Base
-from app.models import user, order # Import models so they are registered with Base
+from app.modules.auth.model import User
+from app.modules.orders.model import Order
 
 target_metadata = Base.metadata
 
