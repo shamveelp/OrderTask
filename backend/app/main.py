@@ -21,7 +21,7 @@ app = FastAPI(
 # Set all CORS enabled origins
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # In production, restrict this
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"], # Fix for WebSocket 403 with credentials
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -33,8 +33,10 @@ api_router.include_router(auth_router)
 api_router.include_router(orders_router)
 api_router.include_router(dashboard_router)
 
-# Include websocket
-@api_router.websocket("/ws/ws")
+
+app.include_router(api_router, prefix=settings.API_V1_STR)
+
+@app.websocket(f"{settings.API_V1_STR}/ws")
 async def websocket_endpoint(websocket: WebSocket):
     await manager.connect(websocket)
     try:
@@ -42,8 +44,6 @@ async def websocket_endpoint(websocket: WebSocket):
             await websocket.receive_text()
     except WebSocketDisconnect:
         manager.disconnect(websocket)
-
-app.include_router(api_router, prefix=settings.API_V1_STR)
 
 @app.get("/")
 def root():

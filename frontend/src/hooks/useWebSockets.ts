@@ -1,31 +1,51 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { WS_URL } from '@/services/api';
 
 export function useWebSocket() {
   const [messages, setMessages] = useState<any[]>([]);
+  const wsRef = useRef<WebSocket | null>(null);
 
   useEffect(() => {
-    const ws = new WebSocket(WS_URL);
+    let timeoutId: NodeJS.Timeout;
 
-    ws.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        setMessages((prev) => [...prev, data]);
-      } catch (e) {
-        console.error('Failed to parse websocket message', e);
-      }
+    const connect = () => {
+      const ws = new WebSocket(WS_URL);
+      wsRef.current = ws;
+
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          setMessages((prev) => [...prev, data]);
+        } catch (e) {
+          console.error('Failed to parse websocket message', e);
+        }
+      };
+
+      ws.onopen = () => {
+        console.log('Connected to WebSocket');
+      };
+
+      ws.onclose = () => {
+        console.log('WebSocket closed. Reconnecting in 3 seconds...');
+        timeoutId = setTimeout(connect, 3000);
+      };
+
+      ws.onerror = (error) => {
+        // Silently handle error to avoid cluttering console during hot reloads
+        // The onclose handler will automatically attempt reconnection
+        ws.close();
+      };
     };
 
-    ws.onopen = () => {
-      console.log('Connected to WebSocket');
-    };
-
-    ws.onerror = (error) => {
-      console.error('WebSocket error:', error);
-    };
+    connect();
 
     return () => {
-      ws.close();
+      clearTimeout(timeoutId);
+      if (wsRef.current) {
+        // Prevent reconnect on deliberate unmount
+        wsRef.current.onclose = null; 
+        wsRef.current.close();
+      }
     };
   }, []);
 
